@@ -1,12 +1,11 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_riverpod/legacy.dart';
 import 'package:product_application/state/productState.dart';
-import '../model/productModel.dart';
+import '../models/productModel.dart';
 import '../repository/localRepository.dart';
 import '../repository/productRepository.dart';
 
 class ProductNotifier extends StateNotifier<ProductState> {
-
   final ProductRepository _productRepo;
   final LocalDataRepository _localDataRepo;
 
@@ -44,13 +43,11 @@ class ProductNotifier extends StateNotifier<ProductState> {
         result = await _productRepo.fetchProducts();
       }
 
-      // Tüm ürünleri allProducts'a kaydet
       state = state.copyWith(
         productList: AsyncValue.data(result),
         allProducts: result.products,
       );
 
-      // Eğer arama varsa, lokal filtreleme yap
       if (state.searchQuery.isNotEmpty) {
         _filterLocalProducts();
       }
@@ -83,13 +80,11 @@ class ProductNotifier extends StateNotifier<ProductState> {
     state = state.copyWith(favoriteIds: ids);
   }
 
-  // LOKAL FİLTRELEME - API çağırmadan
   void _filterLocalProducts() {
     final query = state.searchQuery.toLowerCase();
     final allProds = state.allProducts;
 
     if (query.isEmpty) {
-      // Arama yoksa tüm ürünleri göster
       state = state.copyWith(
         productList: AsyncValue.data(
           ProductList(
@@ -101,7 +96,6 @@ class ProductNotifier extends StateNotifier<ProductState> {
         ),
       );
     } else {
-      // Arama varsa filtrele
       final filtered = allProds.where((product) {
         final title = (product.title ?? '').toLowerCase();
         final description = (product.description ?? '').toLowerCase();
@@ -125,18 +119,15 @@ class ProductNotifier extends StateNotifier<ProductState> {
     }
   }
 
-  // Arama yap - LOKAL, API çağırmadan
   void searchProducts(String query) {
     final trimmedQuery = query.trim();
     if (state.searchQuery == trimmedQuery) return;
 
     state = state.copyWith(searchQuery: trimmedQuery, currentCategory: 'all');
 
-    // Sadece lokal filtreleme yap
     _filterLocalProducts();
   }
 
-  // Kategoriye göre filtrele
   void filterByCategory(String category) {
     if (state.currentCategory == category) return;
 
@@ -144,7 +135,6 @@ class ProductNotifier extends StateNotifier<ProductState> {
     _loadProducts();
   }
 
-  // Favori durumunu değiştir
   Future<void> toggleFavorite(Product product) async {
     if (product.id == null) return;
 
@@ -178,13 +168,11 @@ class ProductNotifier extends StateNotifier<ProductState> {
     state = state.copyWith(shoppingIds: newShoppingIds);
   }
 
-  // Sepet kontrolü
   bool isShopping(int? id) {
     if (id == null) return false;
     return state.shoppingIds.contains(id);
   }
 
-  // Ürünün favori olup olmadığını kontrol et
   bool isFavorite(int? id) {
     if (id == null) return false;
     return state.favoriteIds.contains(id);

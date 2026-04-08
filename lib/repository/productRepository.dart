@@ -1,5 +1,5 @@
 import 'package:dio/dio.dart';
-import '../model/productModel.dart';
+import '../models/productModel.dart';
 
 class ProductRepository {
   static const String apiUrl = 'https://dummyjson.com/products';

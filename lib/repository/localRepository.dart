@@ -1,12 +1,11 @@
 import 'package:hive/hive.dart';
-import '../model/productModel.dart';
+import '../models/productModel.dart';
 
 class LocalDataRepository {
 
   static const String _favoriteBoxName = "favorites";
   static const String _shoppingBoxName = "shopping";
 
-  //her defasında çağırmadan erişim
   Box<Product> get _favoriteBox => Hive.box<Product>(_favoriteBoxName);
   Box<Product> get _shoppingBox => Hive.box<Product>(_shoppingBoxName);
 

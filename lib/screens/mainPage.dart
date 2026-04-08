@@ -1,11 +1,10 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:product_application/screens/shoppingCardPage.dart';
 import '../state/productProvider.dart';
 import 'favoritePage.dart';
 import 'homePage.dart';
-import 'shoppingcardPage.dart';
 
-//yönlendirmeleri yönetmek ve durum bilgisini bir noktada görüntülemek
 class MainPage extends ConsumerStatefulWidget {
   const MainPage({super.key});
 
@@ -19,7 +18,7 @@ class _MainPageState extends ConsumerState<MainPage> {
   final List<Widget> _screens = [
     const HomePage(),
     const FavoritesPage(),
-    const ShoppingcardPage(),
+    const ShoppingCardPage(),
   ];
 
   void _onItemTapped(int index) {
@@ -30,9 +29,12 @@ class _MainPageState extends ConsumerState<MainPage> {
 
   @override
   Widget build(BuildContext context) {
-    // Favori ve Sepet ID'lerini izle
-    final favCount = ref.watch(productNotifierProvider.select((state) => state.favoriteIds.length));
-    final cartCount = ref.watch(productNotifierProvider.select((state) => state.shoppingIds.length));
+    final favCount = ref.watch(
+      productNotifierProvider.select((state) => state.favoriteIds.length),
+    );
+    final cartCount = ref.watch(
+      productNotifierProvider.select((state) => state.shoppingIds.length),
+    );
 
     return Scaffold(
       body: _screens[_selectindex],
@@ -43,27 +45,35 @@ class _MainPageState extends ConsumerState<MainPage> {
             icon: Icon(Icons.home_filled),
             label: 'Ana Ekran',
           ),
-          BottomNavigationBarItem(
-            icon: Badge( // Favori sayısını göstermek için Badge
-              isLabelVisible: favCount > 0,
-              label: Text(favCount.toString()),
-              child: const Icon(Icons.favorite),
-            ),
-            label: 'Favoriler',
-          ),
-          BottomNavigationBarItem(
-            icon: Badge( // Sepet sayısını göstermek için Badge
-              isLabelVisible: cartCount > 0,
-              label: Text(cartCount.toString()),
-              child: const Icon(Icons.shopping_basket_rounded),
-            ),
-            label: 'Sepetim',
-          ),
+          _buildBottomFav(favCount),
+          _buildBottomBasket(cartCount),
         ],
         currentIndex: _selectindex,
         selectedItemColor: Colors.orange,
         onTap: _onItemTapped,
       ),
+    );
+  }
+
+  BottomNavigationBarItem _buildBottomBasket(int cartCount) {
+    return BottomNavigationBarItem(
+      icon: Badge(
+        isLabelVisible: cartCount > 0,
+        label: Text(cartCount.toString()),
+        child: const Icon(Icons.shopping_basket_rounded),
+      ),
+      label: 'Sepetim',
+    );
+  }
+
+  BottomNavigationBarItem _buildBottomFav(int favCount) {
+    return BottomNavigationBarItem(
+      icon: Badge(
+        isLabelVisible: favCount > 0,
+        label: Text(favCount.toString()),
+        child: const Icon(Icons.favorite),
+      ),
+      label: 'Favoriler',
     );
   }
 }

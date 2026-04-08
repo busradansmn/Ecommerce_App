@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../state/productProvider.dart';
+import 'package:product_application/models/productModel.dart';
+import 'package:product_application/state/productNotifier.dart';
 import 'productdetailsPage.dart';
 
 class FavoritesPage extends ConsumerWidget {
@@ -8,17 +10,14 @@ class FavoritesPage extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-
-    // Favori durumlarını izle
-    final onlyfavorite = ref.watch(
+    final favorite = ref.watch(
       productNotifierProvider.select((state) => state.favoriteIds),
     );
     final localRepo = ref.read(localDataRepositoryProvider);
 
-    // Favori ürün listesi (Hive'dan çekilir)
     final favorites = localRepo
         .getAllFavorites()
-        .where((p) => onlyfavorite.contains(p.id))
+        .where((p) => favorite.contains(p.id))
         .toList();
 
     final productNotifier = ref.read(productNotifierProvider.notifier);
@@ -50,76 +49,77 @@ class FavoritesPage extends ConsumerWidget {
               itemCount: favorites.length,
               itemBuilder: (context, index) {
                 final product = favorites[index];
-                return Card(
-                  margin: const EdgeInsets.all(8),
-                  color: Colors.white,
-                  elevation: 1,
-                  child: GestureDetector(
-                    onTap: () {
-                      Navigator.push(
-                        context,
-                        MaterialPageRoute(
-                          builder: (_) => ProductDetailsPage(product: product),
-                        ),
-                      );
-                    },
-                    child: Container(
-                      padding: const EdgeInsets.symmetric(
-                        vertical: 8,
-                        horizontal: 8,
-                      ),
-                      height: 70,
-                      child: Row(
-                        crossAxisAlignment: CrossAxisAlignment.center,
-                        children: [
-                          //Ürün Resmi
-                          ClipRRect(
-                            borderRadius: BorderRadius.circular(8),
-                            child: Image.network(
-                              product.thumbnail ?? "",
-                              width: 50,
-                              height: 50,
-                              fit: BoxFit.cover,
-                            ),
-                          ),
-                          const SizedBox(width: 12),
-                          // TITLE ve SUBTITLE
-                          Expanded(
-                            child: Column(
-                              mainAxisAlignment: MainAxisAlignment.center,
-                              crossAxisAlignment: CrossAxisAlignment.start,
-                              children: [
-                                Text(
-                                  product.title ?? "",
-                                  style: const TextStyle(
-                                    fontWeight: FontWeight.bold,
-                                    fontSize: 14,
-                                  ),
-                                  maxLines: 2,
-                                  overflow: TextOverflow.ellipsis,
-                                ),
-                                Text(
-                                  "\$${product.price}",
-                                  style: TextStyle(color: Colors.grey[600]),
-                                ),
-                              ],
-                            ),
-                          ),
-                          // Favoriden Çıkarma Butonu
-                          IconButton(
-                            icon: const Icon(Icons.favorite, color: Colors.red),
-                            onPressed: () {
-                              // Notifier ile kaldır
-                              productNotifier.toggleFavorite(product);
-                            },
-                          ),
-                        ],
-                      ),
-                    ),
-                  ),
-                );
+                return _buildCardFav(context, product, productNotifier);
               },
             ),
+    );
+  }
+
+  Card _buildCardFav(
+    BuildContext context,
+    Product product,
+    ProductNotifier productNotifier,
+  ) {
+    return Card(
+      margin: const EdgeInsets.all(8),
+      color: Colors.white,
+      elevation: 1,
+      child: GestureDetector(
+        onTap: () {
+          Navigator.push(
+            context,
+            MaterialPageRoute(
+              builder: (_) => ProductDetailsPage(product: product),
+            ),
+          );
+        },
+        child: Container(
+          padding: const EdgeInsets.symmetric(vertical: 8, horizontal: 8),
+          height: 70,
+          child: Row(
+            crossAxisAlignment: CrossAxisAlignment.center,
+            children: [
+              ClipRRect(
+                borderRadius: BorderRadius.circular(8),
+                child: Image.network(
+                  product.thumbnail ?? "",
+                  width: 50,
+                  height: 50,
+                  fit: BoxFit.cover,
+                ),
+              ),
+              const SizedBox(width: 12),
+              Expanded(
+                child: Column(
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      product.title ?? "",
+                      style: const TextStyle(
+                        fontWeight: FontWeight.bold,
+                        fontSize: 14,
+                      ),
+                      maxLines: 2,
+                      overflow: TextOverflow.ellipsis,
+                    ),
+                    Text(
+                      "\$${product.price}",
+                      style: TextStyle(color: Colors.grey[600]),
+                    ),
+                  ],
+                ),
+              ),
+              IconButton(
+                icon: const Icon(Icons.favorite, color: Colors.red),
+                onPressed: () {
+                  productNotifier.toggleFavorite(product);
+                },
+              ),
+            ],
+          ),
+        ),
+      ),
     );
   }
 }

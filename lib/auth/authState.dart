@@ -13,7 +13,6 @@ class AuthState {
     required this.isRefreshingToken,
   });
 
-  // Başlangıç durumu
   factory AuthState.initial() => AuthState(
     isLoading: true,
     user: null,
@@ -21,13 +20,12 @@ class AuthState {
     isRefreshingToken: false,
   );
 
-  // Nullable parametreler için özel kontrol
   AuthState copyWith({
     bool? isLoading,
     UserModel? user,
     String? error,
     bool? isRefreshingToken,
-    bool clearUser = false,  // User'ı temizlemek için flag
+    bool clearUser = false, // User'ı temizlemek için flag
     bool clearError = false, // Error'u temizlemek için flag
   }) {
     return AuthState(

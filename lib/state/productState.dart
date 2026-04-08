@@ -1,7 +1,6 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import '../model/productModel.dart';
+import '../models/productModel.dart';
 
-//tüm veriyi tek bir kutuya (nesneye) koymak
 class ProductState {
   final AsyncValue<ProductList> productList;
   final AsyncValue<List<String>> categories;

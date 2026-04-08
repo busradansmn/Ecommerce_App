@@ -2,20 +2,18 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../auth/authProvider.dart';
 import 'loginPage.dart';
+import 'package:product_application/model/userModel.dart';
 
 class ProfileScreen extends ConsumerWidget {
-  const ProfileScreen({Key? key}) : super(key: key);
+  const ProfileScreen({super.key});
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-
-    // State'leri al ve select ile sadece ilgili kısımları izle
     final currentUser = ref.watch(
       authNotifierProvider.select((state) => state.user),
     );
 
-    //token durumunu izler
-    final _isRefreshing = ref.watch(
+    final isRefreshing = ref.watch(
       authNotifierProvider.select((state) => state.isRefreshingToken),
     );
 
@@ -23,26 +21,7 @@ class ProfileScreen extends ConsumerWidget {
       return const LoginPage();
     }
     Future<void> handleLogout() async {
-      final confirm = await showDialog<bool>(
-        context: context,
-        builder: (context) => AlertDialog(
-          title: const Text('Çıkış Yap'),
-          content: const Text('Çıkış yapmak istediğinize emin misiniz?'),
-          actions: [
-            TextButton(
-              onPressed: () => Navigator.pop(context, false),
-              child: const Text('İptal'),
-            ),
-            TextButton(
-              onPressed: () => Navigator.pop(context, true),
-              child: const Text(
-                'Çıkış Yap',
-                style: TextStyle(color: Colors.red),
-              ),
-            ),
-          ],
-        ),
-      );
+      final confirm = await _buildShowDialog(context);
       if (confirm == true) {
         ref.read(authNotifierProvider.notifier).logout();
       }
@@ -77,60 +56,15 @@ class ProfileScreen extends ConsumerWidget {
               child: Column(
                 children: [
                   const SizedBox(height: 30),
-                  Hero(
-                    tag: 'profile_image',
-                    child: Container(
-                      decoration: BoxDecoration(
-                        shape: BoxShape.circle,
-                        border: Border.all(color: Colors.white, width: 4),
-                        boxShadow: [
-                          BoxShadow(
-                            color: Colors.black.withOpacity(0.2),
-                            blurRadius: 20,
-                            offset: const Offset(0, 10),
-                          ),
-                        ],
-                      ),
-                      child: CircleAvatar(
-                        radius: 70,
-                        backgroundColor: Colors.grey[300],
-                        backgroundImage: currentUser.image != null
-                            ? NetworkImage(currentUser.image!)
-                            : null,
-                        child: currentUser.image == null
-                            ? Icon(
-                                Icons.person,
-                                size: 70,
-                                color: Colors.grey[600],
-                              )
-                            : null,
-                      ),
-                    ),
-                  ),
+                  _buildProfileHero(currentUser),
                   const SizedBox(height: 30),
-                  // İsim
-                  Text(
-                    '${currentUser.firstName ?? ''} ${currentUser.lastName ?? ''}',
-                    style: const TextStyle(
-                      fontSize: 28,
-                      fontWeight: FontWeight.bold,
-                      color: Colors.white,
-                    ),
-                  ),
+                  _buildTextName(currentUser),
                   const SizedBox(height: 8),
-                  // Kullanıcı adı
-                  Text(
-                    '@${currentUser.username ?? ''}',
-                    style: TextStyle(
-                      fontSize: 16,
-                      color: Colors.white.withOpacity(0.9),
-                    ),
-                  ),
+                  _buildTextProfile(currentUser),
                   const SizedBox(height: 30),
                 ],
               ),
             ),
-            // Bilgiler Bölümü
             Padding(
               padding: const EdgeInsets.all(16.0),
               child: Column(
@@ -164,80 +98,140 @@ class ProfileScreen extends ConsumerWidget {
                     color: Colors.orange,
                   ),
                   const SizedBox(height: 20),
-                  // Token Durumu
-                  Container(
-                    padding: const EdgeInsets.all(16),
-                    decoration: BoxDecoration(
-                      color: _isRefreshing
-                          ? Colors.yellow[50]
-                          : Colors.green[50],
-                      borderRadius: BorderRadius.circular(12),
-                      border: Border.all(
-                        color: _isRefreshing
-                            ? Colors.yellow[200]!
-                            : Colors.green[200]!,
-                      ),
-                    ),
-                    child: Row(
-                      children: [
-                        Icon(
-                          _isRefreshing
-                              ? Icons.hourglass_empty
-                              : Icons.check_circle,
-                          color: _isRefreshing
-                              ? Colors.yellow[900]
-                              : Colors.green[700],
-                        ),
-                        const SizedBox(width: 12),
-                        Expanded(
-                          child: Column(
-                            crossAxisAlignment: CrossAxisAlignment.start,
-                            children: [
-                              Text(
-                                _isRefreshing
-                                    ? 'Token Arka Planda Yenileniyor...'
-                                    : 'Oturum Aktif',
-                                style: TextStyle(
-                                  fontWeight: FontWeight.bold,
-                                  color: _isRefreshing
-                                      ? Colors.yellow[900]
-                                      : Colors.green[900],
-                                ),
-                              ),
-                              const SizedBox(height: 4),
-                              Text(
-                                'Token otomatik olarak her 30 dakikada bir yenilenir',
-                                style: TextStyle(
-                                  fontSize: 12,
-                                  color: _isRefreshing
-                                      ? Colors.yellow[700]
-                                      : Colors.green[700],
-                                ),
-                              ),
-                            ],
-                          ),
-                        ),
-                        if (_isRefreshing)
-                          SizedBox(
-                            width: 20,
-                            height: 20,
-                            child: CircularProgressIndicator(
-                              strokeWidth: 2,
-                              valueColor: AlwaysStoppedAnimation(
-                                _isRefreshing
-                                    ? Colors.yellow[700]
-                                    : Colors.green[700],
-                              ),
-                            ),
-                          ),
-                      ],
-                    ),
-                  ),
+                  _buildContainerToken(isRefreshing),
                 ],
               ),
             ),
           ],
         ),
+      ),
+    );
+  }
+
+  Container _buildContainerToken(bool isRefreshing) {
+    return Container(
+      padding: const EdgeInsets.all(16),
+      decoration: BoxDecoration(
+        color: isRefreshing ? Colors.yellow[50] : Colors.green[50],
+        borderRadius: BorderRadius.circular(12),
+        border: Border.all(
+          color: isRefreshing ? Colors.yellow[200]! : Colors.green[200]!,
+        ),
+      ),
+      child: Row(
+        children: [
+          Icon(
+            isRefreshing ? Icons.hourglass_empty : Icons.check_circle,
+            color: isRefreshing ? Colors.yellow[900] : Colors.green[700],
+          ),
+          const SizedBox(width: 12),
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  isRefreshing
+                      ? 'Token Arka Planda Yenileniyor...'
+                      : 'Oturum Aktif',
+                  style: TextStyle(
+                    fontWeight: FontWeight.bold,
+                    color: isRefreshing
+                        ? Colors.yellow[900]
+                        : Colors.green[900],
+                  ),
+                ),
+                const SizedBox(height: 4),
+                Text(
+                  'Token otomatik olarak her 30 dakikada bir yenilenir',
+                  style: TextStyle(
+                    fontSize: 12,
+                    color: isRefreshing
+                        ? Colors.yellow[700]
+                        : Colors.green[700],
+                  ),
+                ),
+              ],
+            ),
+          ),
+          if (isRefreshing)
+            SizedBox(
+              width: 20,
+              height: 20,
+              child: CircularProgressIndicator(
+                strokeWidth: 2,
+                valueColor: AlwaysStoppedAnimation(
+                  isRefreshing ? Colors.yellow[700] : Colors.green[700],
+                ),
+              ),
+            ),
+        ],
+      ),
+    );
+  }
+
+  Text _buildTextProfile(UserModel currentUser) {
+    return Text(
+      '@${currentUser.username ?? ''}',
+      style: TextStyle(fontSize: 16, color: Colors.white.withOpacity(0.9)),
+    );
+  }
+
+  Text _buildTextName(UserModel currentUser) {
+    return Text(
+      '${currentUser.firstName ?? ''} ${currentUser.lastName ?? ''}',
+      style: const TextStyle(
+        fontSize: 28,
+        fontWeight: FontWeight.bold,
+        color: Colors.white,
+      ),
+    );
+  }
+
+  Hero _buildProfileHero(UserModel currentUser) {
+    return Hero(
+      tag: 'profile_image',
+      child: Container(
+        decoration: BoxDecoration(
+          shape: BoxShape.circle,
+          border: Border.all(color: Colors.white, width: 4),
+          boxShadow: [
+            BoxShadow(
+              color: Colors.black.withOpacity(0.2),
+              blurRadius: 20,
+              offset: const Offset(0, 10),
+            ),
+          ],
+        ),
+        child: CircleAvatar(
+          radius: 70,
+          backgroundColor: Colors.grey[300],
+          backgroundImage: currentUser.image != null
+              ? NetworkImage(currentUser.image!)
+              : null,
+          child: currentUser.image == null
+              ? Icon(Icons.person, size: 70, color: Colors.grey[600])
+              : null,
+        ),
+      ),
+    );
+  }
+
+  Future<bool?> _buildShowDialog(BuildContext context) {
+    return showDialog<bool>(
+      context: context,
+      builder: (context) => AlertDialog(
+        title: const Text('Çıkış Yap'),
+        content: const Text('Çıkış yapmak istediğinize emin misiniz?'),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(context, false),
+            child: const Text('İptal'),
+          ),
+          TextButton(
+            onPressed: () => Navigator.pop(context, true),
+            child: const Text('Çıkış Yap', style: TextStyle(color: Colors.red)),
+          ),
+        ],
       ),
     );
   }

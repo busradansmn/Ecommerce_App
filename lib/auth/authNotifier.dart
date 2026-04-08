@@ -4,11 +4,7 @@ import '../model/userModel.dart';
 import 'authRepository.dart';
 import 'authState.dart';
 
-//Uygulamanın oturum durumunu (AuthState) yönetir,
-// kullanıcı giriş/çıkış akışını kontrol eder ve Riverpod aracılığıyla kullanıcı arayüzünü günceller
-
 class AuthNotifier extends StateNotifier<AuthState> {
-
   final AuthRepository _authRepository;
   Timer? _tokenRefreshTimer;
 
@@ -22,7 +18,6 @@ class AuthNotifier extends StateNotifier<AuthState> {
     super.dispose();
   }
 
-  // kullanıcı hatırla kayıtlı geçerli bir oturum anahtarı (token) var mı
   Future<void> checkInitialAuth() async {
     state = state.copyWith(isLoading: true, error: null);
     try {
@@ -35,7 +30,6 @@ class AuthNotifier extends StateNotifier<AuthState> {
         state = state.copyWith(user: null, isLoading: false);
       }
     } catch (e) {
-      // Hata durumunda isLoading'i kapat
       state = state.copyWith(
         isLoading: false,
         error: "Oturum kontrolünde hata: ${e.toString()}",
@@ -61,7 +55,6 @@ class AuthNotifier extends StateNotifier<AuthState> {
         _startTokenRefreshTimer();
         return true;
       } else {
-        // AuthRepository null dönerse (genellikle hatalı şifre/kullanıcı adı)
         state = state.copyWith(
           isLoading: false,
           error: "Kullanıcı adı veya şifre hatalı!",
@@ -82,7 +75,6 @@ class AuthNotifier extends StateNotifier<AuthState> {
   Future<void> logout() async {
     _tokenRefreshTimer?.cancel();
     await _authRepository.logout();
-    // Logout sonrası `user` null, `isLoading` false olmalı
     state = AuthState.initial().copyWith(isLoading: false, user: null);
   }
 

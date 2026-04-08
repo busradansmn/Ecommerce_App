@@ -52,6 +52,7 @@ dev_dependencies:
   hive_generator: ^2.0.1
   build_runner: ^2.4.6
   json_serializable: ^6.7.1
+  shared_preferences:
 
 # For information on the generic Dart part of this file, see the
 # following page: https://dart.dev/tools/pub/pubspec
